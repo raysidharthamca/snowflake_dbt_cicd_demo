@@ -40,11 +40,6 @@ jobs:
         uses: snowflakedb/snowflake-cli-action@v2.0
         # removed use-oidc: true
 
-      - name: Write private key to file
-        run: |
-          echo "$SNOWFLAKE_PRIVATE_KEY" > /tmp/rsa_key.p8
-          chmod 600 /tmp/rsa_key.p8
-
       - name: Create Snowflake connection config
         run: |
           mkdir -p ~/.snowflake
@@ -60,6 +55,26 @@ jobs:
           role = "$SNOWFLAKE_ROLE"
           EOF
           chmod 0600 ~/.snowflake/config.toml
+          echo "--- config.toml contents ---"
+          cat ~/.snowflake/config.toml
+          
+      - name: Create Snowflake connection config
+        run: |
+          mkdir -p ~/.snowflake
+          cat > ~/.snowflake/config.toml <<EOF
+          [connections.dev]
+          account = "$SNOWFLAKE_ACCOUNT"
+          user = "$SNOWFLAKE_USER"
+          private_key_path = "/tmp/rsa_key.p8"
+          authenticator = "SNOWFLAKE_JWT"
+          database = "$SNOWFLAKE_DATABASE"
+          schema = "$SNOWFLAKE_SCHEMA"
+          warehouse = "$SNOWFLAKE_WAREHOUSE"
+          role = "$SNOWFLAKE_ROLE"
+          EOF
+          chmod 0600 ~/.snowflake/config.toml
+          echo "--- config.toml contents ---"
+          cat ~/.snowflake/config.toml
 
       - name: Test the Snowflake CLI connection
         run: snow connection test --connection dev
