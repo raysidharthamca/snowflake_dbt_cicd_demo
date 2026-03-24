@@ -1,31 +1,18 @@
-name: Deploy dbt Project
-
-# Controls when the action will run. 
-on:
-  push:
-    branches:
-      - main
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: dev
 
-    env: 
-      SNOWFLAKE_CLI_FEATURES_ENABLE_DBT: true
+    env:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
       SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
       SNOWFLAKE_SCHEMA: ${{ vars.SNOWFLAKE_SCHEMA }}
+      SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -36,24 +23,38 @@ jobs:
 
       - name: Install Snowflake CLI
         uses: snowflakedb/snowflake-cli-action@v2.0
-        with: # Ensures Snowflake CLI will search for OIDC users matching this subject
-          use-oidc: true
-        
-      - name: Check Snowflake CLI Version
-        run: snow --version
+        # removed use-oidc: true
 
-      # The -x is short hand for --temporary-connection
+      - name: Write private key to file
+        run: |
+          echo "$SNOWFLAKE_PRIVATE_KEY" > /tmp/rsa_key.p8
+          chmod 600 /tmp/rsa_key.p8
+
+      - name: Create Snowflake connection config
+        run: |
+          mkdir -p ~/.snowflake
+          cat > ~/.snowflake/config.toml <<EOF
+          [connections.dev]
+          account = "$SNOWFLAKE_ACCOUNT"
+          user = "$SNOWFLAKE_USER"
+          private_key_path = "/tmp/rsa_key.p8"
+          database = "$SNOWFLAKE_DATABASE"
+          schema = "$SNOWFLAKE_SCHEMA"
+          warehouse = "$SNOWFLAKE_WAREHOUSE"
+          role = "$SNOWFLAKE_ROLE"
+          EOF
+
       - name: Test the Snowflake CLI connection
-        run: snow connection test -x
+        run: snow connection test --connection dev
 
-      - name: Deploy the dbt project object in ${{ vars.SNOWFLAKE_ACCOUNT }} on ${{ vars.SNOWFLAKE_DATABASE }}.${{ vars.SNOWFLAKE_SCHEMA }}
-        run: snow dbt deploy DEMO_DBT_PROJECT --source ./tasty_bytes_dbt_demo --force -x
+      - name: Deploy the dbt project
+        run: snow dbt deploy DEMO_DBT_PROJECT --source ./tasty_bytes_demo --force --connection dev
 
-      - name: List all of the snowflake dbt project objects on ${{ vars.SNOWFLAKE_ACCOUNT }}
-        run: snow dbt list -x
+      - name: List dbt projects
+        run: snow dbt list --connection dev
 
-      - name: Execute run on dbt project object in ${{ vars.SNOWFLAKE_ACCOUNT }} on ${{ vars.SNOWFLAKE_DATABASE }}.${{ vars.SNOWFLAKE_SCHEMA }}
-        run: snow dbt execute -x DEMO_DBT_PROJECT run --target prod --select raw_pos_order_detail
+      - name: Execute dbt run
+        run: snow dbt execute DEMO_DBT_PROJECT run --target dev --select raw_pos_order_detail --connection dev
 
-      - name: Execute data quality test on dbt project object in ${{ vars.SNOWFLAKE_ACCOUNT }} on ${{ vars.SNOWFLAKE_DATABASE }}.${{ vars.SNOWFLAKE_SCHEMA }}
-        run: snow dbt execute -x DEMO_DBT_PROJECT test --target prod --select raw_pos_order_detail
+      - name: Execute dbt test
+        run: snow dbt execute DEMO_DBT_PROJECT test --target dev --select raw_pos_order_detail --connection dev
