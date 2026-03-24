@@ -53,6 +53,7 @@ jobs:
           account = "$SNOWFLAKE_ACCOUNT"
           user = "$SNOWFLAKE_USER"
           private_key_path = "/tmp/rsa_key.p8"
+          authenticator = "SNOWFLAKE_JWT"
           database = "$SNOWFLAKE_DATABASE"
           schema = "$SNOWFLAKE_SCHEMA"
           warehouse = "$SNOWFLAKE_WAREHOUSE"
