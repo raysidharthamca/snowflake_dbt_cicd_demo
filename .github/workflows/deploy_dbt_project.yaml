@@ -42,7 +42,9 @@ jobs:
 
       - name: Write private key to file
         run: |
-          echo "$SNOWFLAKE_PRIVATE_KEY" > /tmp/rsa_key.p8
+          cat << 'EOF' > /tmp/rsa_key.p8
+          ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          EOF
           chmod 600 /tmp/rsa_key.p8
           echo "--- First line ---"
           head -1 /tmp/rsa_key.p8
