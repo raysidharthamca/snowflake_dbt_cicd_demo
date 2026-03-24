@@ -1,0 +1,11 @@
+# Logs
+logs/
+
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+main.py
+
+# OS
+.DS_Store
