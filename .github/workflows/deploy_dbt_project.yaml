@@ -58,6 +58,7 @@ jobs:
           warehouse = "$SNOWFLAKE_WAREHOUSE"
           role = "$SNOWFLAKE_ROLE"
           EOF
+          chmod 0600 ~/.snowflake/config.toml
 
       - name: Test the Snowflake CLI connection
         run: snow connection test --connection dev
