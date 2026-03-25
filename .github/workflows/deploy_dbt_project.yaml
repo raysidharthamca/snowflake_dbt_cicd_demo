@@ -102,7 +102,7 @@ jobs:
         run: snow dbt list --connection dev
 
       - name: Execute dbt run
-        run: snow dbt execute DEMO_DBT_PROJECT run --target dev --select models/example/my_first_dbt_model.sql --connection dev
+        run: snow dbt execute DEMO_DBT_PROJECT run --target dev --select models/example/my_first_dbt_model.sql
 
       - name: Execute dbt test
-        run: snow dbt execute DEMO_DBT_PROJECT test --target dev --select tests/assert_my_first_dbt_model_row_count.sql --connection dev
+        run: snow dbt execute DEMO_DBT_PROJECT test --target dev --select tests/assert_my_first_dbt_model_row_count.sql
