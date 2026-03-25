@@ -74,6 +74,25 @@ jobs:
       - name: Test the Snowflake CLI connection
         run: snow connection test --connection dev
 
+      - name: Create dbt profiles.yml
+        run: |
+          cat > ./tasty_bytes_demo/profiles.yml << EOF
+          tasty_bytes_demo:
+            target: dev
+            outputs:
+              dev:
+                type: snowflake
+                account: "$SNOWFLAKE_ACCOUNT"
+                user: "$SNOWFLAKE_USER"
+                private_key_path: "/tmp/rsa_key.p8"
+                authenticator: jwt
+                role: "$SNOWFLAKE_ROLE"
+                database: "$SNOWFLAKE_DATABASE"
+                warehouse: "$SNOWFLAKE_WAREHOUSE"
+                schema: "$SNOWFLAKE_SCHEMA"
+                threads: 4
+          EOF
+
       - name: Deploy the dbt project
         run: snow dbt deploy DEMO_DBT_PROJECT --source ./tasty_bytes_demo --force --connection dev
 
