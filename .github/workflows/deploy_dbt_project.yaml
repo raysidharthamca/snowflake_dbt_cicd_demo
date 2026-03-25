@@ -56,7 +56,9 @@ jobs:
       - name: Create Snowflake connection config
         run: |
           mkdir -p ~/.snowflake
-          cat > ~/.snowflake/config.toml <<EOF
+          cat > ~/.snowflake/config.toml << EOF
+          default_connection_name = "dev"
+
           [connections.dev]
           account = "$SNOWFLAKE_ACCOUNT"
           user = "$SNOWFLAKE_USER"
@@ -68,11 +70,8 @@ jobs:
           role = "$SNOWFLAKE_ROLE"
           EOF
           chmod 0600 ~/.snowflake/config.toml
-          echo "--- config.toml contents ---"
-          cat ~/.snowflake/config.toml
-
-      - name: Test the Snowflake CLI connection
-        run: snow connection test --connection dev
+            - name: Test the Snowflake CLI connection
+              run: snow connection test --connection dev
 
       - name: Create dbt profiles.yml
         run: |
