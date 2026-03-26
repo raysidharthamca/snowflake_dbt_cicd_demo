@@ -7,5 +7,7 @@ __pycache__/
 *.pyc
 main.py
 
+dbt_packages/
+
 # OS
 .DS_Store
