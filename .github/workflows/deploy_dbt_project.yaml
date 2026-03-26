@@ -95,6 +95,12 @@ jobs:
                 threads: 4
           EOF
 
+      - name: Install dbt and run deps
+        run: |
+          pip install dbt-snowflake
+          cd tasty_bytes_demo
+          dbt deps --profiles-dir .
+
       - name: Deploy the dbt project
         run: snow dbt deploy DEMO_DBT_PROJECT --source ./tasty_bytes_demo --force --connection dev
 
